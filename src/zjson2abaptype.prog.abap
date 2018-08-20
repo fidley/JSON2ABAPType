@@ -61,15 +61,16 @@ class lcl_json_structure definition.
     methods: get_id returning value(r_id) type i.
     methods: display.
     methods: get_types returning value(r_types) type string,
-      init.
+      init,
+      get_internal_types
+        changing
+          value(c_type) type t_hierarchy.
 endclass.
 
 
 start-of-selection.
   data(hlp) = new lcl_hlp( ).
   call screen 0100.
-
-
 
 
 *&---------------------------------------------------------------------*
@@ -171,8 +172,6 @@ class lcl_json_structure implementation.
 
   endmethod.
 
-
-
   method display.
     cl_demo_output=>display( create_types( ) ).
   endmethod.
@@ -194,8 +193,6 @@ class lcl_json_structure implementation.
     endloop.
 
   endmethod.
-
-
 
   method check_component.
 
@@ -238,44 +235,43 @@ class lcl_json_structure implementation.
                         ).
 
           catch cx_root.
-
-            data(other_type) =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
-            append value #( level = level name = i_comp-name type = other_type->type_kind lenght = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
+            "May be a table of strings or integers.
+            if table_type is not initial.
+              try.
+                  if table_type->type_kind eq 'h'.
+                    data(table_line_as_el_type) = cast cl_abap_elemdescr( cl_abap_elemdescr=>describe_by_data_ref( p_data_ref = <test> )  ).
+                    add 1 to level.
+                    append value #( level = level name = i_comp-name type = table_line_as_el_type->type_kind absolute_type = table_line_as_el_type->absolute_name parent = table_line_as_el_type->absolute_name structure  = abap_true  id = id ) to hierarchy.
+                  endif.
+                catch cx_root.
+                  data(other_type) =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
+                  append value #( level = level name = i_comp-name type = other_type->type_kind lenght = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
+              endtry.
+            else.
+              other_type =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
+              append value #( level = level name = i_comp-name type = other_type->type_kind lenght = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
+            endif.
         endtry.
     endtry.
 
   endmethod.
 
-
-
   method create_types.
     data: components type string.
     loop at hierarchy assigning field-symbol(<h>).
-      if <h>-structure eq abap_true.
+      if <h>-structure eq abap_true and <h>-type ne 'g'.
         <h>-final_type = |{ <h>-name } type t_{ <h>-name }{ <h>-id }|.
         <h>-type_definition = |types: begin of t_{ <h>-name }{ <h>-id },{ cl_abap_char_utilities=>newline }{ c_components }end of t_{ <h>-name }{ <h>-id }.|.
+      elseif <h>-structure eq abap_true.
+        <h>-final_type = |{ <h>-name } type t_{ <h>-name }{ <h>-id }|.
+        get_internal_types( changing  c_type = <h> ).
+        <h>-type_definition = |types: t_{ <h>-name }{ <h>-id } type { <h>-absolute_type }.|.
       elseif <h>-table eq abap_true.
         <h>-final_type = |{ <h>-name } type tt_{ <h>-name }{ <h>-id }|.
         <h>-type_definition = |types: tt_{ <h>-name }{ <h>-id } type standard table of t_{ <h>-name }{ <h>-id } with default key.|.
       else.
 
-        replace first occurrence of regex '\\TYPE-POOL=(.*)\\TYPE=' in <h>-absolute_type with ''.
-        if sy-subrc eq 0.
-          <h>-final_type = |{ <h>-name } type { <h>-absolute_type }|.
-          continue.
-        else.
-          replace first occurrence of '\TYPE=' in <h>-absolute_type with ' '.
-        endif.
-
-        if <h>-type eq cl_abap_typedescr=>typekind_char.
-          <h>-final_type = |{ <h>-name } type { <h>-absolute_type } lenght { <h>-lenght }|.
-        elseif <h>-type eq cl_abap_typedescr=>typekind_packed.
-          <h>-final_type = |{ <h>-name } type { <h>-absolute_type } lenght { <h>-lenght } decimals { <h>-decimals }|.
-        elseif <h>-type eq cl_abap_typedescr=>typekind_num.
-          <h>-final_type = |{ <h>-name } type { <h>-absolute_type } lenght { <h>-lenght }|.
-        else.
-          <h>-final_type = |{ <h>-name } type { <h>-absolute_type }|.
-        endif.
+        get_internal_types( changing  c_type = <h> ).
       endif.
     endloop.
 
@@ -301,4 +297,23 @@ class lcl_json_structure implementation.
     r_types = create_types( ).
   endmethod.
 
+  method get_internal_types.
+    replace first occurrence of regex '\\TYPE-POOL=(.*)\\TYPE=' in c_type-absolute_type with ''.
+    if sy-subrc eq 0.
+      c_type-final_type = |{ c_type-name } type { c_type-absolute_type }|.
+      return.
+    else.
+      replace first occurrence of '\TYPE=' in c_type-absolute_type with ' '.
+    endif.
+
+    if c_type-type eq cl_abap_typedescr=>typekind_char.
+      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } lenght { c_type-lenght }|.
+    elseif c_type-type eq cl_abap_typedescr=>typekind_packed.
+      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } lenght { c_type-lenght } decimals { c_type-decimals }|.
+    elseif c_type-type eq cl_abap_typedescr=>typekind_num.
+      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } lenght { c_type-lenght }|.
+    else.
+      c_type-final_type = |{ c_type-name } type { c_type-absolute_type }|.
+    endif.
+  endmethod.
 endclass.
