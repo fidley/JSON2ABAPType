@@ -257,7 +257,15 @@ class lcl_json_structure implementation.
         <h>-final_type = |{ <h>-name } type tt_{ <h>-name }{ <h>-id }|.
         <h>-type_definition = |types: tt_{ <h>-name }{ <h>-id } type standard table of t_{ <h>-name }{ <h>-id } with default key.|.
       else.
-        replace first occurrence of '\TYPE=' in <h>-absolute_type with ' '.
+
+        replace first occurrence of regex '\\TYPE-POOL=(.*)\\TYPE=' in <h>-absolute_type with ''.
+        if sy-subrc eq 0.
+          <h>-final_type = |{ <h>-name } type { <h>-absolute_type }|.
+          continue.
+        else.
+          replace first occurrence of '\TYPE=' in <h>-absolute_type with ' '.
+        endif.
+
         if <h>-type eq cl_abap_typedescr=>typekind_char.
           <h>-final_type = |{ <h>-name } type { <h>-absolute_type } lenght { <h>-lenght }|.
         elseif <h>-type eq cl_abap_typedescr=>typekind_packed.
