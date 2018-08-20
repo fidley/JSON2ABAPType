@@ -215,8 +215,9 @@ class lcl_json_structure implementation.
       catch cx_root.
 
         try.
+            data(id) = get_id( ).
             data(table_type) = cast cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data_ref( p_data_ref = i_data ) ).
-            append value #( level = level name = i_comp-name type = table_type->type_kind absolute_type = table_type->absolute_name parent = i_parent table  = abap_true  id = get_id( ) ) to hierarchy.
+            append value #( level = level name = i_comp-name type = table_type->type_kind absolute_type = table_type->absolute_name parent = i_parent table  = abap_true  id = id ) to hierarchy.
 
             field-symbols: <tab>  type standard table,
                            <test> type any.
@@ -228,7 +229,7 @@ class lcl_json_structure implementation.
             endtry.
 
             data(table_line_type) = cast cl_abap_structdescr(  cl_abap_structdescr=>describe_by_data_ref( p_data_ref = <test> ) ).
-            append value #( level = level name = i_comp-name type = table_line_type->type_kind absolute_type = table_line_type->absolute_name parent = table_type->absolute_name structure  = abap_true  id = get_id( ) ) to hierarchy.
+            append value #( level = level name = i_comp-name type = table_line_type->type_kind absolute_type = table_line_type->absolute_name parent = table_type->absolute_name structure  = abap_true  id = id ) to hierarchy.
 
             check_object( i_parent = table_type->absolute_name
                           i_data  = <test>
