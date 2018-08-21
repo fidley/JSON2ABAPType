@@ -8,15 +8,31 @@ data: ok_code type sy-ucomm.
 class lcl_json_structure definition deferred.
 class lcl_hlp definition.
   public section.
-
-    data: converter      type ref to lcl_json_structure,
-          results        type string,
-          source_editor  type ref to cl_gui_textedit,
-          results_editor type ref to cl_gui_textedit.
+    types: begin of t_source,
+             line type char255,
+           end of t_source.
+    types: tt_source type standard table of t_source with default key.
+    data: converter     type ref to lcl_json_structure,
+          results       type string,
+          source_editor type ref to cl_gui_textedit,
+          abap_editor   type ref to cl_wb_editor.
     methods: constructor.
     methods: create_source_editor.
-    methods: create_results_editor.
     methods: convert.
+    methods: pai importing value(i_okcode) type sy-ucomm,
+      save_editor.
+  private section.
+
+    methods update_editor
+      importing
+        i_source type tt_source.
+    methods call_editor
+      changing
+        c_source type tt_source.
+    methods pretty_print_code
+      changing
+        c_source type tt_source.
+    data: handler type ref to cl_wb_editor.
 endclass.
 
 class lcl_json_structure definition.
@@ -70,7 +86,10 @@ endclass.
 
 start-of-selection.
   data(hlp) = new lcl_hlp( ).
+
   call screen 0100.
+
+
 
 
 *&---------------------------------------------------------------------*
@@ -80,7 +99,7 @@ start-of-selection.
 *----------------------------------------------------------------------*
 module pbo output.
   set pf-status 'STATUS_0100'.
-  hlp->create_results_editor( ).
+  set titlebar 'TITLE'.
   hlp->create_source_editor( ).
 endmodule.
 *&---------------------------------------------------------------------*
@@ -89,13 +108,7 @@ endmodule.
 *       text
 *----------------------------------------------------------------------*
 module pai input.
-  case ok_code.
-    when 'BACK' or 'UP' or 'EXIT'.
-      leave program.
-    when '&CONVERT'.
-      hlp->convert( ).
-  endcase.
-  clear ok_code.
+  hlp->pai( ok_code ).
 endmodule.
 
 class lcl_hlp implementation.
@@ -104,15 +117,11 @@ class lcl_hlp implementation.
     converter = new #( ).
   endmethod.
 
-  method create_results_editor.
-    if results_editor is initial.
-      results_editor = new #( parent = new cl_gui_custom_container( container_name = 'CC_OUTPUT' ) ) .
-    endif.
-  endmethod.
-
   method create_source_editor.
     if source_editor is initial.
-      source_editor = new #( parent = new cl_gui_custom_container( container_name = 'CC_INPUT' ) ) .
+      source_editor = new #( parent =  new cl_gui_docking_container( side = cl_gui_docking_container=>dock_at_left
+                                                                     no_autodef_progid_dynnr = abap_true
+                                                           extension = 500 ) ) .
     endif.
   endmethod.
 
@@ -133,19 +142,91 @@ class lcl_hlp implementation.
           e_data = results
       ).
 
-      results_editor->set_textstream(
-        exporting
-          text                   =  results
-        exceptions
-          error_cntl_call_method = 1
-          not_supported_by_gui   = 2
-          others                 = 3
-      ).
-      if sy-subrc <> 0.
-        message id sy-msgid type sy-msgty number sy-msgno
-                   with sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+      data: target type standard table of t_source.
+      split results at cl_abap_char_utilities=>newline into table target.
+      pretty_print_code( changing c_source = target ).
+
+      if abap_editor is initial.
+        call_editor( changing c_source = target ).
+      else.
+        update_editor( target ).
       endif.
     endif.
+  endmethod.
+
+  method update_editor.
+
+    abap_editor->get_source_instance( importing source_object = data(source_object) ).
+    source_object->set_source_tab( i_source ).
+    abap_editor->visualize_source(
+      exceptions
+        initializing_error = 1
+        others             = 2
+    ).
+    if sy-subrc eq 0.
+      message s001(00) with 'JSON converted.' ##MG_MISSING ##NO_TEXT.
+    endif.
+
+  endmethod.
+
+
+
+  method call_editor.
+
+    call function 'EDITOR_APPLICATION'
+      exporting
+        application        = 'TT'
+        name               = space
+        new                = 'X'
+        title_text         = 'JSON2ABAPType'
+        callback_program   = sy-repid
+        callback_usercom   = 'CALLBACK_USERCOMM'
+        callback_set_pfkey = 'CALLBACK_SET_PFKEY'
+      tables
+        content            = c_source
+      exceptions
+        line               = 0
+        linenumbers        = 0
+        offset             = 0
+        others             = 0.
+
+  endmethod.
+
+
+
+  method pretty_print_code.
+
+    call function 'PRETTY_PRINTER'
+      exporting
+        inctoo             = abap_false  " X = Process Include Programs as Well
+      tables
+        ntext              = c_source " Table of Formatted Source Code
+        otext              = c_source   " Table of Source Code Pending Editing
+      exceptions
+        enqueue_table_full = 0
+        include_enqueued   = 0
+        include_readerror  = 0
+        include_writeerror = 0
+        others             = 0.
+  endmethod.
+
+
+
+  method pai.
+    clear sy-ucomm.
+    case i_okcode.
+      when 'BACK' or 'UP' or 'EXIT'.
+        leave program.
+      when 'CONVERT'.
+        convert( ).
+    endcase.
+  endmethod.
+
+
+  method save_editor.
+    field-symbols:  <abap_editor>   type ref to cl_wb_tbeditor.
+    assign  ('(SAPLS38E)ABAP_TBEDITOR') to <abap_editor>.
+    abap_editor = <abap_editor>->abap_editor.
   endmethod.
 
 endclass.
@@ -192,7 +273,7 @@ class lcl_json_structure implementation.
       unassign <data>.
     endloop.
 
-  endmethod.
+  endmethod. "#EC CI_VALPAR
 
   method check_component.
 
@@ -254,21 +335,21 @@ class lcl_json_structure implementation.
         endtry.
     endtry.
 
-  endmethod.
+  endmethod. "#EC CI_VALPAR
 
   method create_types.
     data: components type string.
     loop at hierarchy assigning field-symbol(<h>).
       if <h>-structure eq abap_true and <h>-type ne 'g'.
-        <h>-final_type = |{ <h>-name } type t_{ <h>-name }{ <h>-id }|.
-        <h>-type_definition = |types: begin of t_{ <h>-name }{ <h>-id },{ cl_abap_char_utilities=>newline }{ c_components }end of t_{ <h>-name }{ <h>-id }.|.
+        <h>-final_type = |{ <h>-name } type t_{ <h>-name }{ <h>-id }| ##NO_TEXT.
+        <h>-type_definition = |types: begin of t_{ <h>-name }{ <h>-id },{ cl_abap_char_utilities=>newline }{ c_components }end of t_{ <h>-name }{ <h>-id }.| ##NO_TEXT.
       elseif <h>-structure eq abap_true.
-        <h>-final_type = |{ <h>-name } type t_{ <h>-name }{ <h>-id }|.
+        <h>-final_type = |{ <h>-name } type t_{ <h>-name }{ <h>-id }| ##NO_TEXT.
         get_internal_types( changing  c_type = <h> ).
-        <h>-type_definition = |types: t_{ <h>-name }{ <h>-id } type { <h>-absolute_type }.|.
+        <h>-type_definition = |types: t_{ <h>-name }{ <h>-id } type { <h>-absolute_type }.| ##NO_TEXT.
       elseif <h>-table eq abap_true.
-        <h>-final_type = |{ <h>-name } type tt_{ <h>-name }{ <h>-id }|.
-        <h>-type_definition = |types: tt_{ <h>-name }{ <h>-id } type standard table of t_{ <h>-name }{ <h>-id } with default key.|.
+        <h>-final_type = |{ <h>-name } type tt_{ <h>-name }{ <h>-id }| ##NO_TEXT.
+        <h>-type_definition = |types: tt_{ <h>-name }{ <h>-id } type standard table of t_{ <h>-name }{ <h>-id } with default key.| ##NO_TEXT.
       else.
 
         get_internal_types( changing  c_type = <h> ).
@@ -315,5 +396,16 @@ class lcl_json_structure implementation.
     else.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type }|.
     endif.
-  endmethod.
+  endmethod. "#EC CI_VALPAR
 endclass.
+
+form callback_usercomm.
+  hlp->pai( sy-ucomm ).
+endform.
+
+
+form callback_set_pfkey.
+  set pf-status 'STATUS_0100'.
+  set titlebar 'TITLE'.
+  hlp->save_editor( ).
+endform.
