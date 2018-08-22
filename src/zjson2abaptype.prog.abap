@@ -66,7 +66,9 @@ class lcl_json_structure definition.
         i_comp          type abap_compdescr
         value(i_data)   type ref to data
         value(i_parent) type  abap_abstypename
-        i_level         type i.
+        i_level         type i
+        i_keep_level    type abap_bool default abap_false
+        i_keep_id       type abap_bool default abap_false.
     methods check_object
       importing
         value(i_data)   type ref to data
@@ -135,21 +137,28 @@ class lcl_hlp implementation.
         others                 = 3
     ).
     if sy-subrc eq 0.
-      converter->build_structure(
-        exporting
-          i_data = /ui2/cl_json=>generate( json = cl_bcs_convert=>txt_to_string( it_soli   = source ) pretty_name = 'Y' )
-        importing
-          e_data = results
-      ).
 
-      data: target type standard table of t_source.
-      split results at cl_abap_char_utilities=>newline into table target.
-      pretty_print_code( changing c_source = target ).
-
-      if abap_editor is initial.
-        call_editor( changing c_source = target ).
+      data(json_data) = /ui2/cl_json=>generate( json = cl_bcs_convert=>txt_to_string( it_soli   = source ) pretty_name = /ui2/cl_json=>pretty_mode-extended ).
+      if json_data is initial.
+        message s001(00) with 'Problem converting JSON.' display like 'E' ##MG_MISSING ##NO_TEXT.
       else.
-        update_editor( target ).
+
+        converter->build_structure(
+          exporting
+            i_data = json_data
+          importing
+            e_data = results
+        ).
+
+        data: target type standard table of t_source.
+        split results at cl_abap_char_utilities=>newline into table target.
+        pretty_print_code( changing c_source = target ).
+
+        if abap_editor is initial.
+          call_editor( changing c_source = target ).
+        else.
+          update_editor( target ).
+        endif.
       endif.
     endif.
   endmethod.
@@ -273,14 +282,16 @@ class lcl_json_structure implementation.
       unassign <data>.
     endloop.
 
-  endmethod. "#EC CI_VALPAR
+  endmethod.                                             "#EC CI_VALPAR
 
   method check_component.
 
     data level type i value 0.
-
-    level = i_level + 1.
-
+    if i_keep_level eq abap_false.
+      level = i_level + 1.
+    else.
+      level = i_level.
+    endif.
     try.
         data(str_type) = cast cl_abap_structdescr(  cl_abap_structdescr=>describe_by_data_ref( p_data_ref  = i_data ) ).
 
@@ -293,20 +304,44 @@ class lcl_json_structure implementation.
       catch cx_root.
 
         try.
-            data(id) = get_id( ).
             data(table_type) = cast cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data_ref( p_data_ref = i_data ) ).
-            append value #( level = level name = i_comp-name type = table_type->type_kind absolute_type = table_type->absolute_name parent = i_parent table  = abap_true  id = id ) to hierarchy.
+            if i_keep_id eq abap_false.
+              data(id) = get_id( ).
+              append value #( level = level name = i_comp-name type = table_type->type_kind absolute_type = table_type->absolute_name parent = i_parent table  = abap_true  id = id ) to hierarchy.
+            else.
+              id = current_id.
+            endif.
 
             field-symbols: <tab>  type standard table,
                            <test> type any.
             assign i_data->* to <tab>.
             try.
                 assign <tab>[ 1 ] to <test>.
+                if sy-subrc ne 0.
+                  append initial line to <tab> assigning <test>.
+                endif.
               catch cx_root.
                 append initial line to <tab> assigning <test>.
             endtry.
 
-            data(table_line_type) = cast cl_abap_structdescr(  cl_abap_structdescr=>describe_by_data_ref( p_data_ref = <test> ) ).
+            cl_abap_structdescr=>describe_by_data_ref( exporting p_data_ref = <test>
+                                                       receiving p_descr_ref = data(table_line_ref)
+                                                       exceptions others = 1 ).
+            if sy-subrc ne 0.
+              data: table_of_strings type standard table of string.
+              check_component(
+                exporting
+                  i_comp   = i_comp
+                  i_data   = ref #( table_of_strings )
+                  i_parent = i_parent
+                  i_level  = i_level
+                  i_keep_level = abap_true
+                  i_keep_id  = abap_true
+              ).
+              return.
+            endif.
+
+            data(table_line_type) = cast cl_abap_structdescr( table_line_ref  ).
             append value #( level = level name = i_comp-name type = table_line_type->type_kind absolute_type = table_line_type->absolute_name parent = table_type->absolute_name structure  = abap_true  id = id ) to hierarchy.
 
             check_object( i_parent = table_type->absolute_name
@@ -325,8 +360,18 @@ class lcl_json_structure implementation.
                     append value #( level = level name = i_comp-name type = table_line_as_el_type->type_kind absolute_type = table_line_as_el_type->absolute_name parent = table_line_as_el_type->absolute_name structure  = abap_true  id = id ) to hierarchy.
                   endif.
                 catch cx_root.
-                  data(other_type) =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
-                  append value #( level = level name = i_comp-name type = other_type->type_kind lenght = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
+                  try.
+                      if table_type->type_kind eq 'h'.
+                        table_line_as_el_type = cast cl_abap_elemdescr( cl_abap_elemdescr=>describe_by_data( p_data = <test> )  ).
+                        add 1 to level.
+                    append value #( level = level name = i_comp-name type = table_line_as_el_type->type_kind absolute_type = table_line_as_el_type->absolute_name parent = table_line_as_el_type->absolute_name structure  = abap_true  id = id ) to hierarchy.
+                      endif.
+                    catch cx_root.
+
+                      data(other_type) =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
+                      append value #( level = level name = i_comp-name type = other_type->type_kind lenght = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
+                  endtry.
+
               endtry.
             else.
               other_type =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
@@ -334,8 +379,7 @@ class lcl_json_structure implementation.
             endif.
         endtry.
     endtry.
-
-  endmethod. "#EC CI_VALPAR
+  endmethod.                                             "#EC CI_VALPAR
 
   method create_types.
     data: components type string.
@@ -367,7 +411,7 @@ class lcl_json_structure implementation.
       endif.
     endloop.
 
-    sort hierarchy by level descending.
+    sort hierarchy by level descending structure descending.
     loop at hierarchy assigning <h> where structure eq abap_true
                                        or table eq abap_true.
       r_definition = r_definition && <h>-type_definition && cl_abap_char_utilities=>newline.
@@ -396,7 +440,7 @@ class lcl_json_structure implementation.
     else.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type }|.
     endif.
-  endmethod. "#EC CI_VALPAR
+  endmethod.                                             "#EC CI_VALPAR
 endclass.
 
 form callback_usercomm.
