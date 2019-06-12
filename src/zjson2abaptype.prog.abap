@@ -45,7 +45,7 @@ class lcl_json_structure definition.
              table           type abap_bool,
              structure       type abap_bool,
              type            type string,
-             lenght          type i,
+             length          type i,
              decimals        type i,
              absolute_type   type  abap_abstypename,
              parent          type string,
@@ -369,13 +369,13 @@ class lcl_json_structure implementation.
                     catch cx_root.
 
                       data(other_type) =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
-                      append value #( level = level name = i_comp-name type = other_type->type_kind lenght = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
+                      append value #( level = level name = i_comp-name type = other_type->type_kind length = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
                   endtry.
 
               endtry.
             else.
               other_type =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
-              append value #( level = level name = i_comp-name type = other_type->type_kind lenght = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
+              append value #( level = level name = i_comp-name type = other_type->type_kind length = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
             endif.
         endtry.
     endtry.
@@ -432,11 +432,11 @@ class lcl_json_structure implementation.
     endif.
 
     if c_type-type eq cl_abap_typedescr=>typekind_char.
-      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } lenght { c_type-lenght }|.
+      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length }|.
     elseif c_type-type eq cl_abap_typedescr=>typekind_packed.
-      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } lenght { c_type-lenght } decimals { c_type-decimals }|.
+      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length } decimals { c_type-decimals }|.
     elseif c_type-type eq cl_abap_typedescr=>typekind_num.
-      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } lenght { c_type-lenght }|.
+      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length }|.
     else.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type }|.
     endif.
