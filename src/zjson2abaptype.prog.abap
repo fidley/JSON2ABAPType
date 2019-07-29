@@ -2,94 +2,109 @@
 "! ABAP type
 "! done by Lukasz Pegiel for http://abapblog.com
 
-report zjson2abaptype.
-data: ok_code type sy-ucomm.
+REPORT zjson2abaptype.
+DATA: ok_code TYPE sy-ucomm.
 
-class lcl_json_structure definition deferred.
-class lcl_hlp definition.
-  public section.
-    types: begin of t_source,
-             line type char255,
-           end of t_source.
-    types: tt_source type standard table of t_source with default key.
-    data: converter     type ref to lcl_json_structure,
-          results       type string,
-          source_editor type ref to cl_gui_textedit,
-          abap_editor   type ref to cl_wb_editor.
-    methods: constructor.
-    methods: create_source_editor.
-    methods: convert.
-    methods: pai importing value(i_okcode) type sy-ucomm,
+
+SELECTION-SCREEN BEGIN OF SCREEN 1001.
+
+PARAMETERS: p_none   RADIOBUTTON GROUP gr1,
+            p_low    RADIOBUTTON GROUP gr1,
+            p_camel  RADIOBUTTON GROUP gr1,
+            p_ext    RADIOBUTTON GROUP gr1 DEFAULT 'X',
+            p_user   RADIOBUTTON GROUP gr1,
+            p_userlo RADIOBUTTON GROUP gr1.
+
+SELECTION-SCREEN END OF SCREEN 1001.
+
+CLASS lcl_json_structure DEFINITION DEFERRED.
+CLASS lcl_hlp DEFINITION.
+  PUBLIC SECTION.
+    TYPES: BEGIN OF t_source,
+             line TYPE char255,
+           END OF t_source.
+    TYPES: tt_source TYPE STANDARD TABLE OF t_source WITH DEFAULT KEY.
+    DATA: converter     TYPE REF TO lcl_json_structure,
+          results       TYPE string,
+          source_editor TYPE REF TO cl_gui_textedit,
+          abap_editor   TYPE REF TO cl_wb_editor.
+    METHODS: constructor.
+    METHODS: create_source_editor.
+    METHODS: convert.
+    METHODS: pai IMPORTING VALUE(i_okcode) TYPE sy-ucomm,
       save_editor.
-  private section.
+  PRIVATE SECTION.
 
-    methods update_editor
-      importing
-        i_source type tt_source.
-    methods call_editor
-      changing
-        c_source type tt_source.
-    methods pretty_print_code
-      changing
-        c_source type tt_source.
-    data: handler type ref to cl_wb_editor.
-endclass.
+    METHODS update_editor
+      IMPORTING
+        i_source TYPE tt_source.
+    METHODS call_editor
+      CHANGING
+        c_source TYPE tt_source.
+    METHODS pretty_print_code
+      CHANGING
+        c_source TYPE tt_source.
+    METHODS get_pretty_name_mode.
+    DATA: handler TYPE REF TO cl_wb_editor,
+          pretty_name_mode type char1 value /ui2/cl_json=>pretty_mode-extended.
 
-class lcl_json_structure definition.
+ENDCLASS.
 
-  public section.
+CLASS lcl_json_structure DEFINITION.
 
-    types: begin of t_hierarchy,
-             level           type i,
-             name            type string,
-             table           type abap_bool,
-             structure       type abap_bool,
-             type            type string,
-             length          type i,
-             decimals        type i,
-             absolute_type   type  abap_abstypename,
-             parent          type string,
-             final_type      type string,
-             type_definition type string,
-             id              type i,
-           end of t_hierarchy,
-           tt_hierarchy type standard table of t_hierarchy with default key.
-    constants: c_components type string value '&&components&&'.
-    data: hierarchy type tt_hierarchy.
+  PUBLIC SECTION.
 
-    methods: build_structure importing i_data type ref to data
-                             exporting e_data type string.
-  private section.
-    data: current_id type i.
-    methods check_component
-      importing
-        i_comp          type abap_compdescr
-        value(i_data)   type ref to data
-        value(i_parent) type  abap_abstypename
-        i_level         type i
-        i_keep_level    type abap_bool default abap_false
-        i_keep_id       type abap_bool default abap_false.
-    methods check_object
-      importing
-        value(i_data)   type ref to data
-        value(i_parent) type  abap_abstypename
-        i_abap_type     type ref to cl_abap_structdescr
-        i_level         type i.
-    methods create_types returning value(r_definition) type string.
-    methods: get_id returning value(r_id) type i.
-    methods: display.
-    methods: get_types returning value(r_types) type string,
+    TYPES: BEGIN OF t_hierarchy,
+             level           TYPE i,
+             name            TYPE string,
+             table           TYPE abap_bool,
+             structure       TYPE abap_bool,
+             type            TYPE string,
+             length          TYPE i,
+             decimals        TYPE i,
+             absolute_type   TYPE  abap_abstypename,
+             parent          TYPE string,
+             final_type      TYPE string,
+             type_definition TYPE string,
+             id              TYPE i,
+           END OF t_hierarchy,
+           tt_hierarchy TYPE STANDARD TABLE OF t_hierarchy WITH DEFAULT KEY.
+    CONSTANTS: c_components TYPE string VALUE '&&components&&'.
+    DATA: hierarchy TYPE tt_hierarchy.
+
+    METHODS: build_structure IMPORTING i_data TYPE REF TO data
+                             EXPORTING e_data TYPE string.
+  PRIVATE SECTION.
+    DATA: current_id TYPE i.
+    METHODS check_component
+      IMPORTING
+        i_comp          TYPE abap_compdescr
+        VALUE(i_data)   TYPE REF TO data
+        VALUE(i_parent) TYPE  abap_abstypename
+        i_level         TYPE i
+        i_keep_level    TYPE abap_bool DEFAULT abap_false
+        i_keep_id       TYPE abap_bool DEFAULT abap_false.
+    METHODS check_object
+      IMPORTING
+        VALUE(i_data)   TYPE REF TO data
+        VALUE(i_parent) TYPE  abap_abstypename
+        i_abap_type     TYPE REF TO cl_abap_structdescr
+        i_level         TYPE i.
+    METHODS create_types RETURNING VALUE(r_definition) TYPE string.
+    METHODS: get_id RETURNING VALUE(r_id) TYPE i.
+    METHODS: display.
+    METHODS: get_types RETURNING VALUE(r_types) TYPE string,
       init,
       get_internal_types
-        changing
-          value(c_type) type t_hierarchy.
-endclass.
+        CHANGING
+          VALUE(c_type) TYPE t_hierarchy.
+ENDCLASS.
 
 
-start-of-selection.
-  data(hlp) = new lcl_hlp( ).
+START-OF-SELECTION.
+  DATA(hlp) = NEW lcl_hlp( ).
 
-  call screen 0100.
+  CALL SCREEN 0100.
 
 
 
@@ -99,91 +114,91 @@ start-of-selection.
 *&---------------------------------------------------------------------*
 *       text
 *----------------------------------------------------------------------*
-module pbo output.
-  set pf-status 'STATUS_0100'.
-  set titlebar 'TITLE'.
+MODULE pbo OUTPUT.
+  SET PF-STATUS 'STATUS_0100'.
+  SET TITLEBAR 'TITLE'.
   hlp->create_source_editor( ).
-endmodule.
+ENDMODULE.
 *&---------------------------------------------------------------------*
 *&      Module  PAI  INPUT
 *&---------------------------------------------------------------------*
 *       text
 *----------------------------------------------------------------------*
-module pai input.
+MODULE pai INPUT.
   hlp->pai( ok_code ).
-endmodule.
+ENDMODULE.
 
-class lcl_hlp implementation.
+CLASS lcl_hlp IMPLEMENTATION.
 
-  method constructor.
-    converter = new #( ).
-  endmethod.
+  METHOD constructor.
+    converter = NEW #( ).
+  ENDMETHOD.
 
-  method create_source_editor.
-    if source_editor is initial.
-      source_editor = new #( parent =  new cl_gui_docking_container( side = cl_gui_docking_container=>dock_at_left
+  METHOD create_source_editor.
+    IF source_editor IS INITIAL.
+      source_editor = NEW #( parent =  NEW cl_gui_docking_container( side = cl_gui_docking_container=>dock_at_left
                                                                      no_autodef_progid_dynnr = abap_true
                                                            extension = 500 ) ) .
-    endif.
-  endmethod.
+    ENDIF.
+  ENDMETHOD.
 
-  method convert.
-    data: source type soli_tab.
+  METHOD convert.
+    DATA: source TYPE soli_tab.
     source_editor->get_text_as_stream(
-      importing
+      IMPORTING
         text                   =  source
-      exceptions
+      EXCEPTIONS
         error_cntl_call_method = 1
-        others                 = 3
+        OTHERS                 = 3
     ).
-    if sy-subrc eq 0.
+    IF sy-subrc EQ 0.
 
-      data(json_data) = /ui2/cl_json=>generate( json = cl_bcs_convert=>txt_to_string( it_soli   = source ) pretty_name = /ui2/cl_json=>pretty_mode-extended ).
-      if json_data is initial.
-        message s001(00) with 'Problem converting JSON.' display like 'E' ##MG_MISSING ##NO_TEXT.
-      else.
+      DATA(json_data) = /ui2/cl_json=>generate( json = cl_bcs_convert=>txt_to_string( it_soli   = source ) pretty_name = pretty_name_mode ).
+      IF json_data IS INITIAL.
+        MESSAGE s001(00) WITH 'Problem converting JSON.' DISPLAY LIKE 'E' ##MG_MISSING ##NO_TEXT.
+      ELSE.
 
         converter->build_structure(
-          exporting
+          EXPORTING
             i_data = json_data
-          importing
+          IMPORTING
             e_data = results
         ).
 
-        data: target type standard table of t_source.
-        split results at cl_abap_char_utilities=>newline into table target.
-        pretty_print_code( changing c_source = target ).
+        DATA: target TYPE STANDARD TABLE OF t_source.
+        SPLIT results AT cl_abap_char_utilities=>newline INTO TABLE target.
+        pretty_print_code( CHANGING c_source = target ).
 
-        if abap_editor is initial.
-          call_editor( changing c_source = target ).
-        else.
+        IF abap_editor IS INITIAL.
+          call_editor( CHANGING c_source = target ).
+        ELSE.
           update_editor( target ).
-        endif.
-      endif.
-    endif.
-  endmethod.
+        ENDIF.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
 
-  method update_editor.
+  METHOD update_editor.
 
-    abap_editor->get_source_instance( importing source_object = data(source_object) ).
+    abap_editor->get_source_instance( IMPORTING source_object = DATA(source_object) ).
     source_object->set_source_tab( i_source ).
     abap_editor->visualize_source(
-      exceptions
+      EXCEPTIONS
         initializing_error = 1
-        others             = 2
+        OTHERS             = 2
     ).
-    if sy-subrc eq 0.
-      message s001(00) with 'JSON converted.' ##MG_MISSING ##NO_TEXT.
-    endif.
+    IF sy-subrc EQ 0.
+      MESSAGE s001(00) WITH 'JSON converted.' ##MG_MISSING ##NO_TEXT.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
 
-  method call_editor.
+  METHOD call_editor.
 
-    call function 'EDITOR_APPLICATION'
-      exporting
+    CALL FUNCTION 'EDITOR_APPLICATION'
+      EXPORTING
         application        = 'TT'
         name               = space
         new                = 'X'
@@ -191,86 +206,100 @@ class lcl_hlp implementation.
         callback_program   = sy-repid
         callback_usercom   = 'CALLBACK_USERCOMM'
         callback_set_pfkey = 'CALLBACK_SET_PFKEY'
-      tables
+      TABLES
         content            = c_source
-      exceptions
+      EXCEPTIONS
         line               = 0
         linenumbers        = 0
         offset             = 0
-        others             = 0.
+        OTHERS             = 0.
 
-  endmethod.
+  ENDMETHOD.
 
 
 
-  method pretty_print_code.
+  METHOD pretty_print_code.
 
-    call function 'PRETTY_PRINTER'
-      exporting
+    CALL FUNCTION 'PRETTY_PRINTER'
+      EXPORTING
         inctoo             = abap_false  " X = Process Include Programs as Well
-      tables
+      TABLES
         ntext              = c_source " Table of Formatted Source Code
         otext              = c_source   " Table of Source Code Pending Editing
-      exceptions
+      EXCEPTIONS
         enqueue_table_full = 0
         include_enqueued   = 0
         include_readerror  = 0
         include_writeerror = 0
-        others             = 0.
-  endmethod.
+        OTHERS             = 0.
+  ENDMETHOD.
 
 
 
-  method pai.
-    clear sy-ucomm.
-    case i_okcode.
-      when 'BACK' or 'UP' or 'EXIT'.
-        leave program.
-      when 'CONVERT'.
+  METHOD pai.
+    CLEAR sy-ucomm.
+    CASE i_okcode.
+      WHEN 'BACK' OR 'UP' OR 'EXIT'.
+        LEAVE PROGRAM.
+      WHEN 'CONVERT'.
+        get_pretty_name_mode( ).
         convert( ).
-    endcase.
-  endmethod.
+    ENDCASE.
+  ENDMETHOD.
 
 
-  method save_editor.
-    field-symbols:  <abap_editor>   type ref to cl_wb_tbeditor.
-    assign  ('(SAPLS38E)ABAP_TBEDITOR') to <abap_editor>.
+  METHOD save_editor.
+    FIELD-SYMBOLS:  <abap_editor>   TYPE REF TO cl_wb_tbeditor.
+    ASSIGN  ('(SAPLS38E)ABAP_TBEDITOR') TO <abap_editor>.
     abap_editor = <abap_editor>->abap_editor.
-  endmethod.
-
-endclass.
+  ENDMETHOD.
 
 
-class lcl_json_structure implementation.
-  method get_id.
-    add 1 to current_id.
+  METHOD get_pretty_name_mode.
+    CALL SELECTION-SCREEN 1001.
+    pretty_name_mode = cond #( when p_none eq abap_true then /ui2/cl_json=>pretty_mode-none
+                               when p_camel eq abap_true then /ui2/cl_json=>pretty_mode-camel_case
+                               when p_ext eq abap_true then /ui2/cl_json=>pretty_mode-extended
+                               when p_low eq abap_true then /ui2/cl_json=>pretty_mode-low_case
+                               when p_user eq abap_true then /ui2/cl_json=>pretty_mode-user
+                               when p_userlo eq abap_true then /ui2/cl_json=>pretty_mode-user_low_case
+                               else /ui2/cl_json=>pretty_mode-extended
+                                 ).
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS lcl_json_structure IMPLEMENTATION.
+  METHOD get_id.
+    ADD 1 TO current_id.
     r_id = current_id.
-  endmethod.
-  method build_structure.
+  ENDMETHOD.
+  METHOD build_structure.
     init( ).
-    data: level type i value 0.
-    data(abap_type) = cast cl_abap_structdescr( cl_abap_structdescr=>describe_by_data_ref( p_data_ref = i_data ) ).
-    append value #( level = level name = 'JSON' type = abap_type->type_kind absolute_type = abap_type->absolute_name structure = abap_true id = get_id( ) ) to hierarchy.
+    DATA: level TYPE i VALUE 0.
+    DATA(abap_type) = CAST cl_abap_structdescr( cl_abap_structdescr=>describe_by_data_ref( p_data_ref = i_data ) ).
+    APPEND VALUE #( level = level name = 'JSON' type = abap_type->type_kind absolute_type = abap_type->absolute_name structure = abap_true id = get_id( ) ) TO hierarchy.
     check_object( i_abap_type = abap_type i_level = level i_data = i_data i_parent = '' ).
     e_data = create_types( ).
-  endmethod.
+  ENDMETHOD.
 
-  method init.
+  METHOD init.
 
-    refresh: hierarchy.
-    clear current_id.
+    REFRESH: hierarchy.
+    CLEAR current_id.
 
-  endmethod.
+  ENDMETHOD.
 
-  method display.
+  METHOD display.
     cl_demo_output=>display( create_types( ) ).
-  endmethod.
-  method check_object.
+  ENDMETHOD.
+  METHOD check_object.
 
-    loop at i_abap_type->components assigning field-symbol(<comp>).
-      data(field) = |i_data->{ <comp>-name }|.
-      assign (field) to field-symbol(<data>).
-      if <data> is assigned and <data> is not initial.
+    LOOP AT i_abap_type->components ASSIGNING FIELD-SYMBOL(<comp>).
+      DATA(field) = |i_data->{ <comp>-name }|.
+      ASSIGN (field) TO FIELD-SYMBOL(<data>).
+      IF <data> IS ASSIGNED AND <data> IS NOT INITIAL.
 
         check_component(
               i_parent = i_abap_type->absolute_name
@@ -278,71 +307,71 @@ class lcl_json_structure implementation.
               i_data = <data>
               i_level = i_level ).
 
-      endif.
-      unassign <data>.
-    endloop.
+      ENDIF.
+      UNASSIGN <data>.
+    ENDLOOP.
 
-  endmethod.                                             "#EC CI_VALPAR
+  ENDMETHOD.                                             "#EC CI_VALPAR
 
-  method check_component.
+  METHOD check_component.
 
-    data level type i value 0.
-    if i_keep_level eq abap_false.
+    DATA level TYPE i VALUE 0.
+    IF i_keep_level EQ abap_false.
       level = i_level + 1.
-    else.
+    ELSE.
       level = i_level.
-    endif.
-    try.
-        data(str_type) = cast cl_abap_structdescr(  cl_abap_structdescr=>describe_by_data_ref( p_data_ref  = i_data ) ).
+    ENDIF.
+    TRY.
+        DATA(str_type) = CAST cl_abap_structdescr(  cl_abap_structdescr=>describe_by_data_ref( p_data_ref  = i_data ) ).
 
         check_object( i_parent = i_parent
                       i_data  = i_data
                       i_abap_type = str_type
                       i_level     = level
                      ).
-        append value #( level = level name = i_comp-name type = str_type->type_kind absolute_type = str_type->absolute_name parent = i_parent structure = abap_true  id = get_id( ) ) to hierarchy.
-      catch cx_root.
+        APPEND VALUE #( level = level name = i_comp-name type = str_type->type_kind absolute_type = str_type->absolute_name parent = i_parent structure = abap_true  id = get_id( ) ) TO hierarchy.
+      CATCH cx_root.
 
-        try.
-            data(table_type) = cast cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data_ref( p_data_ref = i_data ) ).
-            if i_keep_id eq abap_false.
-              data(id) = get_id( ).
-              append value #( level = level name = i_comp-name type = table_type->type_kind absolute_type = table_type->absolute_name parent = i_parent table  = abap_true  id = id ) to hierarchy.
-            else.
+        TRY.
+            DATA(table_type) = CAST cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data_ref( p_data_ref = i_data ) ).
+            IF i_keep_id EQ abap_false.
+              DATA(id) = get_id( ).
+              APPEND VALUE #( level = level name = i_comp-name type = table_type->type_kind absolute_type = table_type->absolute_name parent = i_parent table  = abap_true  id = id ) TO hierarchy.
+            ELSE.
               id = current_id.
-            endif.
+            ENDIF.
 
-            field-symbols: <tab>  type standard table,
-                           <test> type any.
-            assign i_data->* to <tab>.
-            try.
-                assign <tab>[ 1 ] to <test>.
-                if sy-subrc ne 0.
-                  append initial line to <tab> assigning <test>.
-                endif.
-              catch cx_root.
-                append initial line to <tab> assigning <test>.
-            endtry.
+            FIELD-SYMBOLS: <tab>  TYPE STANDARD TABLE,
+                           <test> TYPE any.
+            ASSIGN i_data->* TO <tab>.
+            TRY.
+                ASSIGN <tab>[ 1 ] TO <test>.
+                IF sy-subrc NE 0.
+                  APPEND INITIAL LINE TO <tab> ASSIGNING <test>.
+                ENDIF.
+              CATCH cx_root.
+                APPEND INITIAL LINE TO <tab> ASSIGNING <test>.
+            ENDTRY.
 
-            cl_abap_structdescr=>describe_by_data_ref( exporting p_data_ref = <test>
-                                                       receiving p_descr_ref = data(table_line_ref)
-                                                       exceptions others = 1 ).
-            if sy-subrc ne 0.
-              data: table_of_strings type standard table of string.
+            cl_abap_structdescr=>describe_by_data_ref( EXPORTING p_data_ref = <test>
+                                                       RECEIVING p_descr_ref = DATA(table_line_ref)
+                                                       EXCEPTIONS OTHERS = 1 ).
+            IF sy-subrc NE 0.
+              DATA: table_of_strings TYPE STANDARD TABLE OF string.
               check_component(
-                exporting
+                EXPORTING
                   i_comp   = i_comp
-                  i_data   = ref #( table_of_strings )
+                  i_data   = REF #( table_of_strings )
                   i_parent = i_parent
                   i_level  = i_level
                   i_keep_level = abap_true
                   i_keep_id  = abap_true
               ).
-              return.
-            endif.
+              RETURN.
+            ENDIF.
 
-            data(table_line_type) = cast cl_abap_structdescr( table_line_ref  ).
-            append value #( level = level name = i_comp-name type = table_line_type->type_kind absolute_type = table_line_type->absolute_name parent = table_type->absolute_name structure  = abap_true  id = id ) to hierarchy.
+            DATA(table_line_type) = CAST cl_abap_structdescr( table_line_ref  ).
+            APPEND VALUE #( level = level name = i_comp-name type = table_line_type->type_kind absolute_type = table_line_type->absolute_name parent = table_type->absolute_name structure  = abap_true  id = id ) TO hierarchy.
 
             check_object( i_parent = table_type->absolute_name
                           i_data  = <test>
@@ -350,106 +379,106 @@ class lcl_json_structure implementation.
                           i_level     = level
                         ).
 
-          catch cx_root.
+          CATCH cx_root.
             "May be a table of strings or integers.
-            if table_type is not initial.
-              try.
-                  if table_type->type_kind eq 'h'.
-                    data(table_line_as_el_type) = cast cl_abap_elemdescr( cl_abap_elemdescr=>describe_by_data_ref( p_data_ref = <test> )  ).
-                    add 1 to level.
-                    append value #( level = level name = i_comp-name type = table_line_as_el_type->type_kind absolute_type = table_line_as_el_type->absolute_name parent = table_line_as_el_type->absolute_name structure  = abap_true  id = id ) to hierarchy.
-                  endif.
-                catch cx_root.
-                  try.
-                      if table_type->type_kind eq 'h'.
-                        table_line_as_el_type = cast cl_abap_elemdescr( cl_abap_elemdescr=>describe_by_data( p_data = <test> )  ).
-                        add 1 to level.
-                    append value #( level = level name = i_comp-name type = table_line_as_el_type->type_kind absolute_type = table_line_as_el_type->absolute_name parent = table_line_as_el_type->absolute_name structure  = abap_true  id = id ) to hierarchy.
-                      endif.
-                    catch cx_root.
+            IF table_type IS NOT INITIAL.
+              TRY.
+                  IF table_type->type_kind EQ 'h'.
+                    DATA(table_line_as_el_type) = CAST cl_abap_elemdescr( cl_abap_elemdescr=>describe_by_data_ref( p_data_ref = <test> )  ).
+                    ADD 1 TO level.
+                    APPEND VALUE #( level = level name = i_comp-name type = table_line_as_el_type->type_kind absolute_type = table_line_as_el_type->absolute_name parent = table_line_as_el_type->absolute_name structure  = abap_true  id = id ) TO hierarchy.
+                  ENDIF.
+                CATCH cx_root.
+                  TRY.
+                      IF table_type->type_kind EQ 'h'.
+                        table_line_as_el_type = CAST cl_abap_elemdescr( cl_abap_elemdescr=>describe_by_data( p_data = <test> )  ).
+                        ADD 1 TO level.
+                    APPEND VALUE #( level = level name = i_comp-name type = table_line_as_el_type->type_kind absolute_type = table_line_as_el_type->absolute_name parent = table_line_as_el_type->absolute_name structure  = abap_true  id = id ) TO hierarchy.
+                      ENDIF.
+                    CATCH cx_root.
 
-                      data(other_type) =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
-                      append value #( level = level name = i_comp-name type = other_type->type_kind length = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
-                  endtry.
+                      DATA(other_type) =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
+                      APPEND VALUE #( level = level name = i_comp-name type = other_type->type_kind length = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) TO hierarchy.
+                  ENDTRY.
 
-              endtry.
-            else.
+              ENDTRY.
+            ELSE.
               other_type =  cl_abap_typedescr=>describe_by_data_ref( p_data_ref  = i_data ) .
-              append value #( level = level name = i_comp-name type = other_type->type_kind length = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) to hierarchy.
-            endif.
-        endtry.
-    endtry.
-  endmethod.                                             "#EC CI_VALPAR
+              APPEND VALUE #( level = level name = i_comp-name type = other_type->type_kind length = other_type->length decimals = other_type->decimals absolute_type = other_type->absolute_name parent = i_parent ) TO hierarchy.
+            ENDIF.
+        ENDTRY.
+    ENDTRY.
+  ENDMETHOD.                                             "#EC CI_VALPAR
 
-  method create_types.
-    data: components type string.
-    loop at hierarchy assigning field-symbol(<h>).
-      if <h>-structure eq abap_true and <h>-type ne 'g'.
+  METHOD create_types.
+    DATA: components TYPE string.
+    LOOP AT hierarchy ASSIGNING FIELD-SYMBOL(<h>).
+      IF <h>-structure EQ abap_true AND <h>-type NE 'g'.
         <h>-final_type = |{ <h>-name } type t_{ <h>-name }{ <h>-id }| ##NO_TEXT.
         <h>-type_definition = |types: begin of t_{ <h>-name }{ <h>-id },{ cl_abap_char_utilities=>newline }{ c_components }end of t_{ <h>-name }{ <h>-id }.| ##NO_TEXT.
-      elseif <h>-structure eq abap_true.
+      ELSEIF <h>-structure EQ abap_true.
         <h>-final_type = |{ <h>-name } type t_{ <h>-name }{ <h>-id }| ##NO_TEXT.
-        get_internal_types( changing  c_type = <h> ).
+        get_internal_types( CHANGING  c_type = <h> ).
         <h>-type_definition = |types: t_{ <h>-name }{ <h>-id } type { <h>-absolute_type }.| ##NO_TEXT.
-      elseif <h>-table eq abap_true.
+      ELSEIF <h>-table EQ abap_true.
         <h>-final_type = |{ <h>-name } type tt_{ <h>-name }{ <h>-id }| ##NO_TEXT.
         <h>-type_definition = |types: tt_{ <h>-name }{ <h>-id } type standard table of t_{ <h>-name }{ <h>-id } with default key.| ##NO_TEXT.
-      else.
+      ELSE.
 
-        get_internal_types( changing  c_type = <h> ).
-      endif.
-    endloop.
+        get_internal_types( CHANGING  c_type = <h> ).
+      ENDIF.
+    ENDLOOP.
 
-    loop at hierarchy assigning <h> group by ( parent = <h>-parent ).
-      clear components.
-      loop at group <h> assigning field-symbol(<g>).
+    LOOP AT hierarchy ASSIGNING <h> GROUP BY ( parent = <h>-parent ).
+      CLEAR components.
+      LOOP AT GROUP <h> ASSIGNING FIELD-SYMBOL(<g>).
         components = components && <g>-final_type && ',' && cl_abap_char_utilities=>newline.
-      endloop.
-      assign hierarchy[ absolute_type = <h>-parent ] to field-symbol(<parent>).
-      if sy-subrc eq 0.
-        replace all occurrences of c_components in <parent>-type_definition with components.
-      endif.
-    endloop.
+      ENDLOOP.
+      ASSIGN hierarchy[ absolute_type = <h>-parent ] TO FIELD-SYMBOL(<parent>).
+      IF sy-subrc EQ 0.
+        REPLACE ALL OCCURRENCES OF c_components IN <parent>-type_definition WITH components.
+      ENDIF.
+    ENDLOOP.
 
-    sort hierarchy by level descending structure descending.
-    loop at hierarchy assigning <h> where structure eq abap_true
-                                       or table eq abap_true.
+    SORT hierarchy BY level DESCENDING structure DESCENDING.
+    LOOP AT hierarchy ASSIGNING <h> WHERE structure EQ abap_true
+                                       OR table EQ abap_true.
       r_definition = r_definition && <h>-type_definition && cl_abap_char_utilities=>newline.
-    endloop.
-  endmethod.
+    ENDLOOP.
+  ENDMETHOD.
 
-  method get_types.
+  METHOD get_types.
     r_types = create_types( ).
-  endmethod.
+  ENDMETHOD.
 
-  method get_internal_types.
-    replace first occurrence of regex '\\TYPE-POOL=(.*)\\TYPE=' in c_type-absolute_type with ''.
-    if sy-subrc eq 0.
+  METHOD get_internal_types.
+    REPLACE FIRST OCCURRENCE OF REGEX '\\TYPE-POOL=(.*)\\TYPE=' IN c_type-absolute_type WITH ''.
+    IF sy-subrc EQ 0.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type }|.
-      return.
-    else.
-      replace first occurrence of '\TYPE=' in c_type-absolute_type with ' '.
-    endif.
+      RETURN.
+    ELSE.
+      REPLACE FIRST OCCURRENCE OF '\TYPE=' IN c_type-absolute_type WITH ' '.
+    ENDIF.
 
-    if c_type-type eq cl_abap_typedescr=>typekind_char.
+    IF c_type-type EQ cl_abap_typedescr=>typekind_char.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length }|.
-    elseif c_type-type eq cl_abap_typedescr=>typekind_packed.
+    ELSEIF c_type-type EQ cl_abap_typedescr=>typekind_packed.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length } decimals { c_type-decimals }|.
-    elseif c_type-type eq cl_abap_typedescr=>typekind_num.
+    ELSEIF c_type-type EQ cl_abap_typedescr=>typekind_num.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length }|.
-    else.
+    ELSE.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type }|.
-    endif.
-  endmethod.                                             "#EC CI_VALPAR
-endclass.
+    ENDIF.
+  ENDMETHOD.                                             "#EC CI_VALPAR
+ENDCLASS.
 
-form callback_usercomm.
+FORM callback_usercomm.
   hlp->pai( sy-ucomm ).
-endform.
+ENDFORM.
 
 
-form callback_set_pfkey.
-  set pf-status 'STATUS_0100'.
-  set titlebar 'TITLE'.
+FORM callback_set_pfkey.
+  SET PF-STATUS 'STATUS_0100'.
+  SET TITLEBAR 'TITLE'.
   hlp->save_editor( ).
-endform.
+ENDFORM.
