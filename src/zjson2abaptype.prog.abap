@@ -152,6 +152,11 @@ CLASS lcl_hlp IMPLEMENTATION.
         OTHERS                 = 3
     ).
     IF sy-subrc EQ 0.
+    
+      IF source is initial.
+        MESSAGE s001(00) WITH 'Data input is required' DISPLAY LIKE 'E' ##MG_MISSING ##NO_TEXT.
+        RETURN.
+      ENDIF.
 
       DATA(json_data) = /ui2/cl_json=>generate( json = cl_bcs_convert=>txt_to_string( it_soli   = source ) pretty_name = pretty_name_mode ).
       IF json_data IS INITIAL.
