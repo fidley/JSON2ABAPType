@@ -28,26 +28,22 @@
        <NAME>SCREEN</NAME>
       </RPY_DYCATT>
       <RPY_DYCATT>
-       <TYPE>CUST_CTRL</TYPE>
-       <NAME>CC_INPUT</NAME>
+       <TYPE>SUBSCREEN</TYPE>
+       <NAME>SUB1</NAME>
        <ELEMENT_OF>SCREEN</ELEMENT_OF>
        <LINE>001</LINE>
        <COLUMN>001</COLUMN>
-       <LENGTH>255</LENGTH>
-       <HEIGHT>104</HEIGHT>
-       <C_RESIZE_V>X</C_RESIZE_V>
-       <C_RESIZE_H>X</C_RESIZE_H>
-       <C_LINE_MIN>010</C_LINE_MIN>
-       <C_COLN_MIN>010</C_COLN_MIN>
+       <LENGTH>123</LENGTH>
+       <HEIGHT>006</HEIGHT>
       </RPY_DYCATT>
       <RPY_DYCATT>
        <TYPE>CUST_CTRL</TYPE>
-       <NAME>CC_OUTPUT</NAME>
+       <NAME>CC_INPUT</NAME>
        <ELEMENT_OF>SCREEN</ELEMENT_OF>
-       <LINE>105</LINE>
+       <LINE>007</LINE>
        <COLUMN>001</COLUMN>
-       <LENGTH>255</LENGTH>
-       <HEIGHT>096</HEIGHT>
+       <LENGTH>254</LENGTH>
+       <HEIGHT>161</HEIGHT>
        <C_RESIZE_V>X</C_RESIZE_V>
        <C_RESIZE_H>X</C_RESIZE_H>
        <C_LINE_MIN>010</C_LINE_MIN>
@@ -76,7 +72,14 @@
        <LINE>MODULE pbo.</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW>
+       <LINE>CALL SUBSCREEN sub1 INCLUDING sy-repid &apos;1001&apos;.</LINE>
+      </RPY_DYFLOW>
+      <RPY_DYFLOW/>
+      <RPY_DYFLOW>
        <LINE>PROCESS AFTER INPUT.</LINE>
+      </RPY_DYFLOW>
+      <RPY_DYFLOW>
+       <LINE>CALL SUBSCREEN sub1 .</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW>
        <LINE>MODULE pai.</LINE>
@@ -84,9 +87,12 @@
      </FLOW_LOGIC>
      <SPACES>
       <item>0</item>
-      <item>1</item>
+      <item>2</item>
+      <item>2</item>
       <item>0</item>
-      <item>1</item>
+      <item>0</item>
+      <item>2</item>
+      <item>2</item>
      </SPACES>
     </item>
    </DYNPROS>

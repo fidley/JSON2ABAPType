@@ -6,7 +6,7 @@ REPORT zjson2abaptype.
 DATA: ok_code TYPE sy-ucomm.
 
 
-SELECTION-SCREEN BEGIN OF SCREEN 1001.
+SELECTION-SCREEN BEGIN OF SCREEN 1001 AS SUBSCREEN.
 
 PARAMETERS: p_none   RADIOBUTTON GROUP gr1,
             p_low    RADIOBUTTON GROUP gr1,
@@ -27,26 +27,22 @@ CLASS lcl_hlp DEFINITION.
     DATA: converter     TYPE REF TO lcl_json_structure,
           results       TYPE string,
           source_editor TYPE REF TO cl_gui_textedit,
-          abap_editor   TYPE REF TO cl_wb_editor.
+          abap_editor   TYPE REF TO cl_gui_abapedit.
     METHODS: constructor.
     METHODS: create_source_editor.
     METHODS: convert.
-    METHODS: pai IMPORTING VALUE(i_okcode) TYPE sy-ucomm,
-      save_editor.
+    METHODS: pai IMPORTING VALUE(i_okcode) TYPE sy-ucomm.
+
   PRIVATE SECTION.
 
-    METHODS update_editor
-      IMPORTING
-        i_source TYPE tt_source.
     METHODS call_editor
       CHANGING
-        c_source TYPE tt_source.
+        c_source TYPE tt_source OPTIONAL.
     METHODS pretty_print_code
       CHANGING
         c_source TYPE tt_source.
-    METHODS get_pretty_name_mode.
-    DATA: handler TYPE REF TO cl_wb_editor,
-          pretty_name_mode type char1 value /ui2/cl_json=>pretty_mode-extended.
+    METHODS get_pretty_name_mode RETURNING VALUE(pretty_name_mode) TYPE char1.
+    DATA: handler TYPE REF TO cl_wb_editor.
 
 ENDCLASS.
 
@@ -135,11 +131,13 @@ CLASS lcl_hlp IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create_source_editor.
+
     IF source_editor IS INITIAL.
       source_editor = NEW #( parent =  NEW cl_gui_docking_container( side = cl_gui_docking_container=>dock_at_left
                                                                      no_autodef_progid_dynnr = abap_true
                                                            extension = 500 ) ) .
     ENDIF.
+
   ENDMETHOD.
 
   METHOD convert.
@@ -152,13 +150,17 @@ CLASS lcl_hlp IMPLEMENTATION.
         OTHERS                 = 3
     ).
     IF sy-subrc EQ 0.
-    
-      IF source is initial.
+
+      IF source IS INITIAL.
         MESSAGE s001(00) WITH 'Data input is required' DISPLAY LIKE 'E' ##MG_MISSING ##NO_TEXT.
         RETURN.
       ENDIF.
 
-      DATA(json_data) = /ui2/cl_json=>generate( json = cl_bcs_convert=>txt_to_string( it_soli   = source ) pretty_name = pretty_name_mode ).
+      DATA(json_data) = /ui2/cl_json=>generate(
+        json        = cl_bcs_convert=>txt_to_string( it_soli = source )
+        pretty_name = get_pretty_name_mode( )
+      ).
+
       IF json_data IS INITIAL.
         MESSAGE s001(00) WITH 'Problem converting JSON.' DISPLAY LIKE 'E' ##MG_MISSING ##NO_TEXT.
       ELSE.
@@ -174,50 +176,22 @@ CLASS lcl_hlp IMPLEMENTATION.
         SPLIT results AT cl_abap_char_utilities=>newline INTO TABLE target.
         pretty_print_code( CHANGING c_source = target ).
 
-        IF abap_editor IS INITIAL.
-          call_editor( CHANGING c_source = target ).
-        ELSE.
-          update_editor( target ).
-        ENDIF.
+        call_editor( CHANGING c_source = target ).
+
       ENDIF.
     ENDIF.
   ENDMETHOD.
 
-  METHOD update_editor.
-
-    abap_editor->get_source_instance( IMPORTING source_object = DATA(source_object) ).
-    source_object->set_source_tab( i_source ).
-    abap_editor->visualize_source(
-      EXCEPTIONS
-        initializing_error = 1
-        OTHERS             = 2
-    ).
-    IF sy-subrc EQ 0.
-      MESSAGE s001(00) WITH 'JSON converted.' ##MG_MISSING ##NO_TEXT.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-
   METHOD call_editor.
 
-    CALL FUNCTION 'EDITOR_APPLICATION'
-      EXPORTING
-        application        = 'TT'
-        name               = space
-        new                = 'X'
-        title_text         = 'JSON2ABAPType'
-        callback_program   = sy-repid
-        callback_usercom   = 'CALLBACK_USERCOMM'
-        callback_set_pfkey = 'CALLBACK_SET_PFKEY'
-      TABLES
-        content            = c_source
-      EXCEPTIONS
-        line               = 0
-        linenumbers        = 0
-        offset             = 0
-        OTHERS             = 0.
+    IF abap_editor IS INITIAL.
+      DATA(container) = NEW cl_gui_custom_container( container_name = 'CC_INPUT' ).
+      abap_editor = NEW #( parent = container  ).
+    ENDIF.
+
+    abap_editor->draw( ).
+    abap_editor->set_text( c_source ).
+    abap_editor->undraw( ).
 
   ENDMETHOD.
 
@@ -247,28 +221,19 @@ CLASS lcl_hlp IMPLEMENTATION.
       WHEN 'BACK' OR 'UP' OR 'EXIT'.
         LEAVE PROGRAM.
       WHEN 'CONVERT'.
-        get_pretty_name_mode( ).
         convert( ).
     ENDCASE.
   ENDMETHOD.
 
-
-  METHOD save_editor.
-    FIELD-SYMBOLS:  <abap_editor>   TYPE REF TO cl_wb_tbeditor.
-    ASSIGN  ('(SAPLS38E)ABAP_TBEDITOR') TO <abap_editor>.
-    abap_editor = <abap_editor>->abap_editor.
-  ENDMETHOD.
-
-
   METHOD get_pretty_name_mode.
-    CALL SELECTION-SCREEN 1001.
-    pretty_name_mode = cond #( when p_none eq abap_true then /ui2/cl_json=>pretty_mode-none
-                               when p_camel eq abap_true then /ui2/cl_json=>pretty_mode-camel_case
-                               when p_ext eq abap_true then /ui2/cl_json=>pretty_mode-extended
-                               when p_low eq abap_true then /ui2/cl_json=>pretty_mode-low_case
-                               when p_user eq abap_true then /ui2/cl_json=>pretty_mode-user
-                               when p_userlo eq abap_true then /ui2/cl_json=>pretty_mode-user_low_case
-                               else /ui2/cl_json=>pretty_mode-extended
+
+    pretty_name_mode = COND #( WHEN p_none   EQ abap_true THEN /ui2/cl_json=>pretty_mode-none
+                               WHEN p_camel  EQ abap_true THEN /ui2/cl_json=>pretty_mode-camel_case
+                               WHEN p_ext    EQ abap_true THEN /ui2/cl_json=>pretty_mode-extended
+                               WHEN p_low    EQ abap_true THEN /ui2/cl_json=>pretty_mode-low_case
+                               WHEN p_user   EQ abap_true THEN /ui2/cl_json=>pretty_mode-user
+                               WHEN p_userlo EQ abap_true THEN /ui2/cl_json=>pretty_mode-user_low_case
+                               ELSE /ui2/cl_json=>pretty_mode-extended
                                  ).
   ENDMETHOD.
 
@@ -476,14 +441,3 @@ CLASS lcl_json_structure IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.                                             "#EC CI_VALPAR
 ENDCLASS.
-
-FORM callback_usercomm.
-  hlp->pai( sy-ucomm ).
-ENDFORM.
-
-
-FORM callback_set_pfkey.
-  SET PF-STATUS 'STATUS_0100'.
-  SET TITLEBAR 'TITLE'.
-  hlp->save_editor( ).
-ENDFORM.
