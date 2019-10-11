@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <VSEOCLASS>
+    <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+    <LANGU>E</LANGU>
+    <DESCRIPT>Dynamic Data Access Helper Class</DESCRIPT>
+    <STATE>1</STATE>
+    <CLSCCINCL>X</CLSCCINCL>
+    <FIXPT>X</FIXPT>
+    <UNICODE>X</UNICODE>
+    <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
+   </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>AT</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Component accessor</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>AT_INT</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Internal helper for comonent access</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>CONSTRUCTOR</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Constructor</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>CREATE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Helper method for creating instance of dynamic accessor</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>DEREF</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Dereference deep nested references</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>EMPTY</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Returns TRUE if embedded object is initial (not bound)</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>REF</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Returns reference to embedded object</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>SET</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Sets value of the embedded object, if not initial</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
+     <CMPNAME>VALUE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Returns copy of the value</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
