@@ -156,7 +156,8 @@ CLASS lcl_hlp IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      DATA(json_data) = /ui2/cl_json=>generate(
+*      DATA(json_data) = /ui2/cl_json=>generate(
+      DATA(json_data) = zui2_json=>generate(
         json        = cl_bcs_convert=>txt_to_string( it_soli = source )
         pretty_name = get_pretty_name_mode( )
       ).
@@ -227,13 +228,13 @@ CLASS lcl_hlp IMPLEMENTATION.
 
   METHOD get_pretty_name_mode.
 
-    pretty_name_mode = COND #( WHEN p_none   EQ abap_true THEN /ui2/cl_json=>pretty_mode-none
-                               WHEN p_camel  EQ abap_true THEN /ui2/cl_json=>pretty_mode-camel_case
-                               WHEN p_ext    EQ abap_true THEN /ui2/cl_json=>pretty_mode-extended
-                               WHEN p_low    EQ abap_true THEN /ui2/cl_json=>pretty_mode-low_case
-                               WHEN p_user   EQ abap_true THEN /ui2/cl_json=>pretty_mode-user
-                               WHEN p_userlo EQ abap_true THEN /ui2/cl_json=>pretty_mode-user_low_case
-                               ELSE /ui2/cl_json=>pretty_mode-extended
+    pretty_name_mode = COND #( WHEN p_none   EQ abap_true THEN zui2_json=>pretty_mode-none
+                               WHEN p_camel  EQ abap_true THEN zui2_json=>pretty_mode-camel_case
+                               WHEN p_ext    EQ abap_true THEN zui2_json=>pretty_mode-extended
+                               WHEN p_low    EQ abap_true THEN zui2_json=>pretty_mode-low_case
+                               WHEN p_user   EQ abap_true THEN zui2_json=>pretty_mode-user
+                               WHEN p_userlo EQ abap_true THEN zui2_json=>pretty_mode-user_low_case
+                               ELSE zui2_json=>pretty_mode-extended
                                  ).
   ENDMETHOD.
 
