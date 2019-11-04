@@ -434,7 +434,7 @@ CLASS lcl_json_structure IMPLEMENTATION.
     IF c_type-type EQ cl_abap_typedescr=>typekind_char.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length }|.
     ELSEIF c_type-type EQ cl_abap_typedescr=>typekind_packed.
-      c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length } decimals { c_type-decimals }|.
+      c_type-final_type = |{ c_type-name } type { c_type-type } length { c_type-length } decimals { c_type-decimals }|.
     ELSEIF c_type-type EQ cl_abap_typedescr=>typekind_num.
       c_type-final_type = |{ c_type-name } type { c_type-absolute_type } length { c_type-length }|.
     ELSE.

@@ -918,7 +918,7 @@ METHOD generate_int.
         IF json+offset CS '.'.
           CREATE DATA rr_data TYPE f.
         ELSEIF length GT 9.
-          CREATE DATA rr_data TYPE p.
+          CREATE DATA rr_data TYPE p LENGTH 16.
         ELSE.
           CREATE DATA rr_data TYPE i.
         ENDIF.
