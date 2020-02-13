@@ -248,10 +248,33 @@ CLASS lcl_json_structure IMPLEMENTATION.
   ENDMETHOD.
   METHOD build_structure.
     init( ).
-    DATA: level TYPE i VALUE 0.
-    DATA(abap_type) = CAST cl_abap_structdescr( cl_abap_structdescr=>describe_by_data_ref( p_data_ref = i_data ) ).
-    APPEND VALUE #( level = level name = 'JSON' type = abap_type->type_kind absolute_type = abap_type->absolute_name structure = abap_true id = get_id( ) ) TO hierarchy.
-    check_object( i_abap_type = abap_type i_level = level i_data = i_data i_parent = '' ).
+    DATA: level         TYPE i VALUE 0,
+          abap_type     TYPE REF TO cl_abap_structdescr,
+          abap_ref_type TYPE REF TO cl_abap_refdescr.
+    FIELD-SYMBOLS: <table> TYPE ANY TABLE.
+
+    TRY.
+        DATA(abap_type_table) = CAST cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data_ref( p_data_ref = i_data ) ).
+        ASSIGN i_data->* TO <table>.
+        LOOP AT <table> ASSIGNING FIELD-SYMBOL(<line>).
+          EXIT.
+        ENDLOOP.
+
+        APPEND VALUE #( level = level name = 'JSON' type = abap_type_table->type_kind absolute_type = abap_type_table->absolute_name table = abap_true id = get_id( ) ) TO hierarchy.
+        abap_type = CAST cl_abap_structdescr( cl_abap_structdescr=>describe_by_data_ref( p_data_ref = <line> ) ).
+
+        ADD 1 TO level.
+        APPEND VALUE #( level = level name = 'JSON' type = abap_type->type_kind absolute_type = abap_type->absolute_name structure = abap_true id = get_id( ) ) TO hierarchy.
+        check_object( i_abap_type = abap_type
+                      i_level = level
+                      i_data = <line>
+                      i_parent = '' ).
+
+      CATCH cx_sy_move_cast_error.
+        abap_type = CAST cl_abap_structdescr( cl_abap_structdescr=>describe_by_data_ref( p_data_ref = i_data ) ).
+        APPEND VALUE #( level = level name = 'JSON' type = abap_type->type_kind absolute_type = abap_type->absolute_name structure = abap_true id = get_id( ) ) TO hierarchy.
+        check_object( i_abap_type = abap_type i_level = level i_data = i_data i_parent = '' ).
+    ENDTRY.
     e_data = create_types( ).
   ENDMETHOD.
 
