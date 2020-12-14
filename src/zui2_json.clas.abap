@@ -293,6 +293,7 @@ protected section.
 private section.
 
   data MV_EXTENDED type BOOL .
+  data: NEW_VARIABLE type CHAR128.
   class-data MC_ME_TYPE type STRING .
 *"* private components of class ZUI2_JSON
 *"* do not include other source files here!!!
@@ -991,7 +992,7 @@ METHOD GET_FIELDS.
       " let us check for not well formed canelCase to be compatible with old logic
       lv_name = ls_field-name.
       TRANSLATE lv_name(1) TO UPPER CASE.
-      ls_field-name = lv_name.
+      new_variable = ls_field-name = lv_name.
       INSERT ls_field INTO TABLE rt_fields.
     ENDIF.
 
@@ -1625,7 +1626,7 @@ METHOD SERIALIZE.
   " http://wiki.scn.sap.com/wiki/display/Snippets/One+more+ABAP+to+JSON+Serializer+and+Deserializer
   " **********************************************************************  "
 
-  DATA: lo_json  TYPE REF TO ZUI2_JSON.
+  DATA: lo_json  TYPE REF TO ZUI2_JSON.  "test
 
   CREATE OBJECT lo_json
     EXPORTING
@@ -1649,7 +1650,7 @@ METHOD SERIALIZE_INT.
   "! Usage examples and documentation can be found on SCN:
   " http://wiki.scn.sap.com/wiki/display/Snippets/One+more+ABAP+to+JSON+Serializer+and+Deserializer
   " **********************************************************************  "
-
+  constants: aaaa type char01 value '1'.
   DATA: lo_descr   TYPE REF TO cl_abap_typedescr.
 
   IF type_descr IS INITIAL.
@@ -1726,10 +1727,12 @@ ENDMETHOD.                    "TRIBOOL_TO_BOOL
 
 METHOD XSTRING_TO_STRING.
 
-  DATA: lv_xstring TYPE xstring.
+  DATA: lv_xstring TYPE xstring,
+        lv_in TYPE string.
 
   " let us fix data conversion issues here
-  lv_xstring = in.
+  lv_in = in.
+  lv_xstring = lv_in.
 
   CALL FUNCTION 'SSFC_BASE64_ENCODE'
     EXPORTING
@@ -1740,7 +1743,7 @@ METHOD XSTRING_TO_STRING.
       OTHERS  = 1.
 
   IF sy-subrc IS NOT INITIAL.
-    MOVE in TO out.
+    MOVE lv_in TO out.
   ENDIF.
 
 ENDMETHOD.                    "xstring_to_string

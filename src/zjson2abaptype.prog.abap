@@ -34,6 +34,12 @@ CLASS lcl_hlp DEFINITION.
     METHODS: pai IMPORTING VALUE(i_okcode) TYPE sy-ucomm.
 
   PRIVATE SECTION.
+    CONSTANTS: BEGIN OF user_command,
+                 back    TYPE sy-ucomm VALUE 'BACK' ##NO_TEXT,
+                 up      TYPE sy-ucomm VALUE 'UP' ##NO_TEXT,
+                 exit    TYPE sy-ucomm VALUE 'EXIT' ##NO_TEXT,
+                 convert TYPE sy-ucomm VALUE 'CONVERT' ##NO_TEXT,
+               END OF user_command.
 
     METHODS call_editor
       CHANGING
@@ -99,7 +105,6 @@ ENDCLASS.
 
 START-OF-SELECTION.
   DATA(hlp) = NEW lcl_hlp( ).
-
   CALL SCREEN 0100.
 
 
@@ -219,9 +224,9 @@ CLASS lcl_hlp IMPLEMENTATION.
   METHOD pai.
     CLEAR sy-ucomm.
     CASE i_okcode.
-      WHEN 'BACK' OR 'UP' OR 'EXIT'.
+      WHEN user_command-back OR user_command-up OR user_command-exit .
         LEAVE PROGRAM.
-      WHEN 'CONVERT'.
+      WHEN user_command-convert .
         convert( ).
     ENDCASE.
   ENDMETHOD.
