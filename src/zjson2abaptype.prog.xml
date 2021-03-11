@@ -4,8 +4,6 @@
   <asx:values>
    <PROGDIR>
     <NAME>ZJSON2ABAPTYPE</NAME>
-    <STATE>A</STATE>
-    <VARCL>X</VARCL>
     <SUBC>1</SUBC>
     <RSTAT>K</RSTAT>
     <RLOAD>E</RLOAD>
@@ -42,10 +40,10 @@
        <TYPE>CUST_CTRL</TYPE>
        <NAME>CC_INPUT</NAME>
        <ELEMENT_OF>SCREEN</ELEMENT_OF>
-       <LINE>007</LINE>
+       <LINE>008</LINE>
        <COLUMN>001</COLUMN>
        <LENGTH>254</LENGTH>
-       <HEIGHT>161</HEIGHT>
+       <HEIGHT>158</HEIGHT>
        <C_RESIZE_V>X</C_RESIZE_V>
        <C_RESIZE_H>X</C_RESIZE_H>
        <C_LINE_MIN>010</C_LINE_MIN>
@@ -71,31 +69,22 @@
        <LINE>PROCESS BEFORE OUTPUT.</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW>
-       <LINE>MODULE pbo.</LINE>
+       <LINE>  MODULE pbo.</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW>
-       <LINE>CALL SUBSCREEN sub1 INCLUDING sy-repid &apos;1001&apos;.</LINE>
+       <LINE>  CALL SUBSCREEN sub1 INCLUDING sy-repid &apos;1001&apos;.</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW/>
       <RPY_DYFLOW>
        <LINE>PROCESS AFTER INPUT.</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW>
-       <LINE>CALL SUBSCREEN sub1 .</LINE>
+       <LINE>  CALL SUBSCREEN sub1 .</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW>
-       <LINE>MODULE pai.</LINE>
+       <LINE>  MODULE pai.</LINE>
       </RPY_DYFLOW>
      </FLOW_LOGIC>
-     <SPACES>
-      <item>0</item>
-      <item>2</item>
-      <item>2</item>
-      <item>0</item>
-      <item>0</item>
-      <item>2</item>
-      <item>2</item>
-     </SPACES>
     </item>
    </DYNPROS>
    <CUA>
@@ -253,6 +242,12 @@
      <KEY>P_CAMEL</KEY>
      <ENTRY>Camel Case</ENTRY>
      <LENGTH>18</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_CASES</KEY>
+     <ENTRY>Case Sensitive</ENTRY>
+     <LENGTH>22</LENGTH>
     </item>
     <item>
      <ID>S</ID>
