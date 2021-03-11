@@ -4,10 +4,8 @@
   <asx:values>
    <VSEOCLASS>
     <CLSNAME>ZUI2_DATA_ACCESS</CLSNAME>
-    <VERSION>1</VERSION>
     <LANGU>E</LANGU>
     <DESCRIPT>Dynamic Data Access Helper Class</DESCRIPT>
-    <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

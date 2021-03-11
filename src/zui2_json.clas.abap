@@ -3,160 +3,161 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-class ZUI2_JSON definition
-  public
-  create public .
+CLASS zui2_json DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
-  type-pools ABAP .
-  class CL_ABAP_TSTMP definition load .
-  class CX_SY_CONVERSION_ERROR definition load .
+  PUBLIC SECTION.
+    TYPE-POOLS abap .
+    CLASS cl_abap_tstmp DEFINITION LOAD .
+    CLASS cx_sy_conversion_error DEFINITION LOAD .
 
-  types JSON type STRING .
-  types:
-    BEGIN OF name_mapping,
-            abap  TYPE abap_compname,
-            json  TYPE string,
-           END OF name_mapping .
-  types:
-    name_mappings TYPE HASHED TABLE OF name_mapping WITH UNIQUE KEY abap .
-  types BOOL type CHAR1 .
-  types TRIBOOL type CHAR1 .
-  types PRETTY_NAME_MODE type CHAR1 .
+    TYPES json TYPE string .
+    TYPES:
+      BEGIN OF name_mapping,
+        abap TYPE abap_compname,
+        json TYPE string,
+      END OF name_mapping .
+    TYPES:
+      name_mappings TYPE HASHED TABLE OF name_mapping WITH UNIQUE KEY abap .
+    TYPES bool TYPE char1 .
+    TYPES tribool TYPE char1 .
+    TYPES pretty_name_mode TYPE char1 .
 
-  constants:
-    BEGIN OF pretty_mode,
-                  none          TYPE char1  VALUE ``,
-                  low_case      TYPE char1  VALUE `L`,
-                  camel_case    TYPE char1  VALUE `X`,
-                  extended      TYPE char1  VALUE `Y`,
-                  user          TYPE char1  VALUE `U`,
-                  user_low_case TYPE char1  VALUE `C`,
-                END OF  pretty_mode .
-  constants:
-    BEGIN OF c_bool,
-                  true       TYPE bool  VALUE `X`,
-                  false      TYPE bool  VALUE ``,
-                END OF  c_bool .
-  constants:
-    BEGIN OF c_tribool,
-                  true       TYPE tribool  VALUE c_bool-true,
-                  false      TYPE tribool  VALUE `-`,
-                  undefined  TYPE tribool  VALUE ``,
-                END OF  c_tribool .
-  class-data SV_WHITE_SPACE type STRING read-only .
-  constants MC_KEY_SEPARATOR type STRING value `-` ##NO_TEXT.
-  class-data MC_BOOL_TYPES type STRING read-only value `\TYPE-POOL=ABAP\TYPE=ABAP_BOOL\TYPE=BOOLEAN\TYPE=BOOLE_D\TYPE=XFELD` ##NO_TEXT.
-  class-data MC_BOOL_3STATE type STRING read-only value `\TYPE=BOOLEAN` ##NO_TEXT.
-  constants VERSION type I value 6 ##NO_TEXT.
-  class-data MC_JSON_TYPE type STRING read-only .
+    CONSTANTS:
+      BEGIN OF pretty_mode,
+        none           TYPE char1  VALUE ``,
+        low_case       TYPE char1  VALUE `L`,
+        camel_case     TYPE char1  VALUE `X`,
+        extended       TYPE char1  VALUE `Y`,
+        user           TYPE char1  VALUE `U`,
+        user_low_case  TYPE char1  VALUE `C`,
+        case_sensitive TYPE char1 VALUE 'S',
+      END OF  pretty_mode .
+    CONSTANTS:
+      BEGIN OF c_bool,
+        true  TYPE bool  VALUE `X`,
+        false TYPE bool  VALUE ``,
+      END OF  c_bool .
+    CONSTANTS:
+      BEGIN OF c_tribool,
+        true      TYPE tribool  VALUE c_bool-true,
+        false     TYPE tribool  VALUE `-`,
+        undefined TYPE tribool  VALUE ``,
+      END OF  c_tribool .
+    CLASS-DATA sv_white_space TYPE string READ-ONLY .
+    CONSTANTS mc_key_separator TYPE string VALUE `-` ##NO_TEXT.
+    CLASS-DATA mc_bool_types TYPE string READ-ONLY VALUE `\TYPE-POOL=ABAP\TYPE=ABAP_BOOL\TYPE=BOOLEAN\TYPE=BOOLE_D\TYPE=XFELD` ##NO_TEXT.
+    CLASS-DATA mc_bool_3state TYPE string READ-ONLY VALUE `\TYPE=BOOLEAN` ##NO_TEXT.
+    CONSTANTS version TYPE i VALUE 6 ##NO_TEXT.
+    CLASS-DATA mc_json_type TYPE string READ-ONLY .
 
-  class-methods CLASS_CONSTRUCTOR .
-  class-methods STRING_TO_XSTRING
-    importing
-      !IN type STRING
-    changing
-      value(OUT) type ANY .
-  class-methods XSTRING_TO_STRING
-    importing
-      !IN type ANY
-    returning
-      value(OUT) type STRING .
-  class-methods RAW_TO_STRING
-    importing
-      !IV_XSTRING type XSTRING
-      !IV_ENCODING type ABAP_ENCODING optional
-    returning
-      value(RV_STRING) type STRING .
-  class-methods STRING_TO_RAW
-    importing
-      !IV_STRING type STRING
-      !IV_ENCODING type ABAP_ENCODING optional
-    returning
-      value(RV_XSTRING) type XSTRING .
-  class-methods DUMP
-    importing
-      !DATA type DATA
-      !COMPRESS type BOOL default C_BOOL-FALSE
-      !TYPE_DESCR type ref to CL_ABAP_TYPEDESCR optional
-      !PRETTY_NAME type PRETTY_NAME_MODE default PRETTY_MODE-NONE
-      !ASSOC_ARRAYS type BOOL default C_BOOL-FALSE
-      !TS_AS_ISO8601 type BOOL default C_BOOL-FALSE
-    returning
-      value(R_JSON) type JSON .
-  class-methods DESERIALIZE
-    importing
-      !JSON type JSON optional
-      !JSONX type XSTRING optional
-      !PRETTY_NAME type PRETTY_NAME_MODE default PRETTY_MODE-NONE
-      !ASSOC_ARRAYS type BOOL default C_BOOL-FALSE
-      !ASSOC_ARRAYS_OPT type BOOL default C_BOOL-FALSE
-      !NAME_MAPPINGS type NAME_MAPPINGS optional
-    changing
-      !DATA type DATA .
-  class-methods SERIALIZE
-    importing
-      !DATA type DATA
-      !COMPRESS type BOOL default C_BOOL-FALSE
-      !NAME type STRING optional
-      !PRETTY_NAME type PRETTY_NAME_MODE default PRETTY_MODE-NONE
-      !TYPE_DESCR type ref to CL_ABAP_TYPEDESCR optional
-      !ASSOC_ARRAYS type BOOL default C_BOOL-FALSE
-      !TS_AS_ISO8601 type BOOL default C_BOOL-FALSE
-      !EXPAND_INCLUDES type BOOL default C_BOOL-TRUE
-      !ASSOC_ARRAYS_OPT type BOOL default C_BOOL-FALSE
-      !NUMC_AS_STRING type BOOL default C_BOOL-FALSE
-      !NAME_MAPPINGS type NAME_MAPPINGS optional
-    returning
-      value(R_JSON) type JSON .
-  methods DESERIALIZE_INT
-    importing
-      !JSON type JSON optional
-      !JSONX type XSTRING optional
-    changing
-      !DATA type DATA
-    raising
-      CX_SY_MOVE_CAST_ERROR .
-  class-methods GENERATE
-    importing
-      !JSON type JSON
-      !PRETTY_NAME type PRETTY_NAME_MODE default PRETTY_MODE-NONE
-      !NAME_MAPPINGS type NAME_MAPPINGS optional
-    returning
-      value(RR_DATA) type ref to DATA .
-  methods SERIALIZE_INT
-    importing
-      !DATA type DATA
-      !NAME type STRING optional
-      !TYPE_DESCR type ref to CL_ABAP_TYPEDESCR optional
-    returning
-      value(R_JSON) type JSON .
-  methods GENERATE_INT
-    importing
-      !JSON type JSON
-    returning
-      value(RR_DATA) type ref to DATA .
-  methods CONSTRUCTOR
-    importing
-      !COMPRESS type BOOL default C_BOOL-FALSE
-      !PRETTY_NAME type PRETTY_NAME_MODE default PRETTY_MODE-NONE
-      !ASSOC_ARRAYS type BOOL default C_BOOL-FALSE
-      !TS_AS_ISO8601 type BOOL default C_BOOL-FALSE
-      !EXPAND_INCLUDES type BOOL default C_BOOL-TRUE
-      !ASSOC_ARRAYS_OPT type BOOL default C_BOOL-FALSE
-      !STRICT_MODE type BOOL default C_BOOL-FALSE
-      !NUMC_AS_STRING type BOOL default C_BOOL-FALSE
-      !NAME_MAPPINGS type NAME_MAPPINGS optional .
-  class-methods BOOL_TO_TRIBOOL
-    importing
-      !IV_BOOL type BOOL
-    returning
-      value(RV_TRIBOOL) type TRIBOOL .
-  class-methods TRIBOOL_TO_BOOL
-    importing
-      !IV_TRIBOOL type TRIBOOL
-    returning
-      value(RV_BOOL) type BOOL .
+    CLASS-METHODS class_constructor .
+    CLASS-METHODS string_to_xstring
+      IMPORTING
+        !in        TYPE string
+      CHANGING
+        VALUE(out) TYPE any .
+    CLASS-METHODS xstring_to_string
+      IMPORTING
+        !in        TYPE any
+      RETURNING
+        VALUE(out) TYPE string .
+    CLASS-METHODS raw_to_string
+      IMPORTING
+        !iv_xstring      TYPE xstring
+        !iv_encoding     TYPE abap_encoding OPTIONAL
+      RETURNING
+        VALUE(rv_string) TYPE string .
+    CLASS-METHODS string_to_raw
+      IMPORTING
+        !iv_string        TYPE string
+        !iv_encoding      TYPE abap_encoding OPTIONAL
+      RETURNING
+        VALUE(rv_xstring) TYPE xstring .
+    CLASS-METHODS dump
+      IMPORTING
+        !data          TYPE data
+        !compress      TYPE bool DEFAULT c_bool-false
+        !type_descr    TYPE REF TO cl_abap_typedescr OPTIONAL
+        !pretty_name   TYPE pretty_name_mode DEFAULT pretty_mode-none
+        !assoc_arrays  TYPE bool DEFAULT c_bool-false
+        !ts_as_iso8601 TYPE bool DEFAULT c_bool-false
+      RETURNING
+        VALUE(r_json)  TYPE json .
+    CLASS-METHODS deserialize
+      IMPORTING
+        !json             TYPE json OPTIONAL
+        !jsonx            TYPE xstring OPTIONAL
+        !pretty_name      TYPE pretty_name_mode DEFAULT pretty_mode-none
+        !assoc_arrays     TYPE bool DEFAULT c_bool-false
+        !assoc_arrays_opt TYPE bool DEFAULT c_bool-false
+        !name_mappings    TYPE name_mappings OPTIONAL
+      CHANGING
+        !data             TYPE data .
+    CLASS-METHODS serialize
+      IMPORTING
+        !data             TYPE data
+        !compress         TYPE bool DEFAULT c_bool-false
+        !name             TYPE string OPTIONAL
+        !pretty_name      TYPE pretty_name_mode DEFAULT pretty_mode-none
+        !type_descr       TYPE REF TO cl_abap_typedescr OPTIONAL
+        !assoc_arrays     TYPE bool DEFAULT c_bool-false
+        !ts_as_iso8601    TYPE bool DEFAULT c_bool-false
+        !expand_includes  TYPE bool DEFAULT c_bool-true
+        !assoc_arrays_opt TYPE bool DEFAULT c_bool-false
+        !numc_as_string   TYPE bool DEFAULT c_bool-false
+        !name_mappings    TYPE name_mappings OPTIONAL
+      RETURNING
+        VALUE(r_json)     TYPE json .
+    METHODS deserialize_int
+      IMPORTING
+        !json  TYPE json OPTIONAL
+        !jsonx TYPE xstring OPTIONAL
+      CHANGING
+        !data  TYPE data
+      RAISING
+        cx_sy_move_cast_error .
+    CLASS-METHODS generate
+      IMPORTING
+        !json          TYPE json
+        !pretty_name   TYPE pretty_name_mode DEFAULT pretty_mode-none
+        !name_mappings TYPE name_mappings OPTIONAL
+      RETURNING
+        VALUE(rr_data) TYPE REF TO data .
+    METHODS serialize_int
+      IMPORTING
+        !data         TYPE data
+        !name         TYPE string OPTIONAL
+        !type_descr   TYPE REF TO cl_abap_typedescr OPTIONAL
+      RETURNING
+        VALUE(r_json) TYPE json .
+    METHODS generate_int
+      IMPORTING
+        !json          TYPE json
+      RETURNING
+        VALUE(rr_data) TYPE REF TO data .
+    METHODS constructor
+      IMPORTING
+        !compress         TYPE bool DEFAULT c_bool-false
+        !pretty_name      TYPE pretty_name_mode DEFAULT pretty_mode-none
+        !assoc_arrays     TYPE bool DEFAULT c_bool-false
+        !ts_as_iso8601    TYPE bool DEFAULT c_bool-false
+        !expand_includes  TYPE bool DEFAULT c_bool-true
+        !assoc_arrays_opt TYPE bool DEFAULT c_bool-false
+        !strict_mode      TYPE bool DEFAULT c_bool-false
+        !numc_as_string   TYPE bool DEFAULT c_bool-false
+        !name_mappings    TYPE name_mappings OPTIONAL .
+    CLASS-METHODS bool_to_tribool
+      IMPORTING
+        !iv_bool          TYPE bool
+      RETURNING
+        VALUE(rv_tribool) TYPE tribool .
+    CLASS-METHODS tribool_to_bool
+      IMPORTING
+        !iv_tribool    TYPE tribool
+      RETURNING
+        VALUE(rv_bool) TYPE bool .
 protected section.
 
   types:
@@ -875,9 +876,12 @@ METHOD generate_int.
           ELSE.
             cache-json = ls_comp-name = <field>-name.
             TRANSLATE ls_comp-name USING `/_:_~_._-_`. " remove characters not allowed in component names
-            IF mv_pretty_name EQ pretty_mode-camel_case OR mv_pretty_name EQ pretty_mode-extended.
-              REPLACE ALL OCCURRENCES OF REGEX `([a-z])([A-Z])` IN ls_comp-name WITH `$1_$2`. "#EC NOTEXT
-            ENDIF.
+            CASE mv_pretty_name.
+              WHEN pretty_mode-camel_case OR pretty_mode-extended.
+                REPLACE ALL OCCURRENCES OF REGEX `([a-z])([A-Z])` IN ls_comp-name WITH `$1_$2`. "#EC NOTEXT
+              WHEN pretty_mode-case_sensitive.
+                REPLACE ALL OCCURRENCES OF REGEX `([A-Z])` IN ls_comp-name WITH `_$1`. "#EC NOTEXT
+            ENDCASE.
             TRANSLATE ls_comp-name TO UPPER CASE.
             cache-abap = ls_comp-name = lv_comp_name = ls_comp-name. " truncate by allowed field name length
             INSERT cache INTO TABLE mt_name_mappings_ex.

@@ -8,12 +8,13 @@ DATA: ok_code TYPE sy-ucomm.
 
 SELECTION-SCREEN BEGIN OF SCREEN 1001 AS SUBSCREEN.
 
-PARAMETERS: p_none   RADIOBUTTON GROUP gr1,
-            p_low    RADIOBUTTON GROUP gr1,
-            p_camel  RADIOBUTTON GROUP gr1,
-            p_ext    RADIOBUTTON GROUP gr1 DEFAULT 'X',
-            p_user   RADIOBUTTON GROUP gr1,
-            p_userlo RADIOBUTTON GROUP gr1.
+  PARAMETERS: p_none   RADIOBUTTON GROUP gr1,
+              p_low    RADIOBUTTON GROUP gr1,
+              p_camel  RADIOBUTTON GROUP gr1,
+              p_ext    RADIOBUTTON GROUP gr1 DEFAULT 'X',
+              p_user   RADIOBUTTON GROUP gr1,
+              p_userlo RADIOBUTTON GROUP gr1,
+              p_cases  RADIOBUTTON GROUP gr1.
 
 SELECTION-SCREEN END OF SCREEN 1001.
 
@@ -234,6 +235,7 @@ CLASS lcl_hlp IMPLEMENTATION.
                                WHEN p_low    EQ abap_true THEN zui2_json=>pretty_mode-low_case
                                WHEN p_user   EQ abap_true THEN zui2_json=>pretty_mode-user
                                WHEN p_userlo EQ abap_true THEN zui2_json=>pretty_mode-user_low_case
+                               WHEN P_cases  EQ abap_true THEN zui2_json=>pretty_mode-case_sensitive
                                ELSE zui2_json=>pretty_mode-extended
                                  ).
   ENDMETHOD.
